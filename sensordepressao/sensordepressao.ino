@@ -11,7 +11,7 @@ const int SDA_PIN = 19;         // I2C Dados
 const int SCL_PIN = 22;         // I2C Clock
 
 // --- Configuração da Rede Wi-Fi Criada pelo ESP32 ---
-const char* ssidAP = "TopScan_Vaso";     // Nome da rede Wi-Fi
+const char* ssidAP = "TopScan_Shutdown";     // Nome da rede Wi-Fi
 const char* senhaAP = "topscan123";      // Senha (mínimo 8 caracteres)
 WebServer server(80);
 
@@ -31,9 +31,9 @@ uint32_t corAtual = 0;
 
 // --- Configuração I2C e Calibração ---
 byte enderecoSensor = 0;
-const float limiarSuperior = 96.0;     // >= 96.0 kPa -> Circuito LIGA (MOSFET ON)
-const float limiarInferior = 90.0;     // <= 90.0 kPa -> Circuito DESLIGA (MOSFET OFF)
-const float offsetCalibracao = 138.99; // Referência (-37.67 kPa = 101.32 kPa)
+const float limiarSuperior = 3;     // >= 3 PSI-> Circuito LIGA (MOSFET ON)
+const float limiarInferior = 2.5;     // <= 2.5 PSI -> Circuito DESLIGA (MOSFET OFF)
+//const float offsetCalibracao = 138.99; 
 
 // --- Variáveis Globais (Compartilhadas com o Servidor Web) ---
 float pressaoAbsoluta = 0.0;
@@ -114,7 +114,7 @@ void handleRoot() {
   <div class="card">
     <h1>Monitoramento do Vaso</h1>
     <div class="valor" id="pressao">--.--</div>
-    <div class="unidade">kPa (Pressão Absoluta)</div>
+    <div class="unidade">PSI (Pressão Absoluta)</div>
     
     <div id="status" class="badge off">Aguardando leitura...</div>
     <div id="alertaSensor" class="alerta-sensor"></div>
@@ -141,15 +141,15 @@ void handleRoot() {
           const elAlerta = document.getElementById('alertaSensor');
 
           // Atualiza valor da pressão
-          elPressao.innerText = data.sensor ? data.pressao.toFixed(2) : 'ERRO';
+          elPressao.innerText = data.sensor ? data.pressao.toFixed(1) : 'ERRO';
 
           // Atualiza aviso da condição real do sensor
           if (!data.sensor) {
             elAlerta.innerText = 'Aviso: Falha na leitura do sensor I2C';
           } else if (!data.seguro) {
-            elAlerta.innerText = 'Aviso: Pressão fora da faixa segura (< 90 kPa)';
+            elAlerta.innerText = 'Aviso: Pressão fora da faixa segura (< 2.5 PSI)';
           } else {
-            elAlerta.innerText = 'Sensor dentro da faixa normal';
+            elAlerta.innerText = 'Sensor dentro da faixa normal (> 3 PSI)';
           }
 
           // Atualiza badge principal conforme modo e estado do MOSFET
@@ -262,7 +262,7 @@ void loop() {
       // deltaPressao = (pressaoBruta / 2097152.0) * 100.0;
       // pressaoAbsoluta = (101.32 - deltaPressao) + offsetCalibracao;
       //pressaoAbsoluta = -2.35 * pow(10,-6) * (float)pressaoBruta + 17.44;
-      pressaoAbsoluta = -2.353146E-06 * (float)pressaoBruta + 17;
+      pressaoAbsoluta = -2.353146E-06 * (float)pressaoBruta ;
       leituraI2C_OK = true;
     }
   }
@@ -322,7 +322,7 @@ void loop() {
   if (!leituraI2C_OK) {
     Serial.println("\tI2C: FALHA/AUSENTE");
   } else {
-    Serial.print("\tPressao_Absoluta_kPa:");
+    Serial.print("\tPressao_Absoluta_PSI:");
     Serial.println(pressaoAbsoluta, 2);
   }
 
