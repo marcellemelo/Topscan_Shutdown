@@ -2,6 +2,7 @@
 #include <Adafruit_NeoPixel.h>
 #include <WiFi.h>
 #include <WebServer.h>
+#include <math.h>
 
 // --- Mapeamento de Hardware ---
 const int pinoMosfet = 33;      // Saída para o Gate do MOSFET
@@ -258,8 +259,10 @@ void loop() {
 
       if (pressaoBruta & 0x800000) pressaoBruta -= 0x1000000;
       
-      deltaPressao = (pressaoBruta / 2097152.0) * 100.0;
-      pressaoAbsoluta = (101.32 - deltaPressao) + offsetCalibracao;
+      // deltaPressao = (pressaoBruta / 2097152.0) * 100.0;
+      // pressaoAbsoluta = (101.32 - deltaPressao) + offsetCalibracao;
+      //pressaoAbsoluta = -2.35 * pow(10,-6) * (float)pressaoBruta + 17.44;
+      pressaoAbsoluta = -2.353146E-06 * (float)pressaoBruta + 17;
       leituraI2C_OK = true;
     }
   }
